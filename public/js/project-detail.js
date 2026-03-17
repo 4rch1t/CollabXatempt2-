@@ -12,15 +12,26 @@
   async function load() {
     try {
       project = await api('/projects/' + projectId);
+    } catch (err) {
+      container.innerHTML = '<div class="empty-state"><div class="icon">😕</div><h3>Project not found</h3><p style="color:var(--gray);font-size:0.85rem;margin-bottom:16px">' + escHtml(err.message) + '</p><a href="/projects.html" class="btn btn-dark">Back to Projects</a></div>';
+      return;
+    }
+
+    try {
       document.title = project.title + ' — CollabX';
       renderProject();
+    } catch (renderErr) {
+      console.error('Render error:', renderErr);
+      container.innerHTML = '<p style="color:var(--red)">Error displaying project. Please try refreshing.</p>';
+    }
 
-      if (currentUser && project.owner._id === currentUser.id) {
+    try {
+      if (currentUser && project.owner && project.owner._id === currentUser.id) {
         applications = await api('/projects/' + projectId + '/applications');
         renderApplications();
       }
-    } catch (err) {
-      container.innerHTML = '<div class="empty-state"><div class="icon">😕</div><h3>Project not found</h3><a href="/projects.html" class="btn btn-dark">Back to Projects</a></div>';
+    } catch (appErr) {
+      console.error('Applications load error:', appErr);
     }
   }
 
@@ -31,8 +42,8 @@
     const canManage = isOwner || isLeader;
     const skills = (project.requiredSkills || []).map(skillTag).join('');
 
-    const members = project.members.map(m => {
-      const mIsOwner = m._id === project.owner._id;
+const members = project.members.filter(m => m && m._id).map(m => {
+      const mIsOwner = m._id === (project.owner && project.owner._id);
       const mIsLeader = project.leader && m._id === project.leader._id;
       let badge = '';
       if (mIsOwner) badge = '<span class="role-badge owner-badge">Owner</span>';
@@ -40,13 +51,13 @@
 
       let kickBtn = '';
       if (canManage && !mIsOwner && m._id !== (currentUser && currentUser.id)) {
-        kickBtn = '<button class="kick-btn" data-id="' + m._id + '" data-name="' + escHtml(m.name) + '" title="Remove member">✕</button>';
+        kickBtn = '<button class="kick-btn" data-id="' + m._id + '" data-name="' + escHtml(m.name || '') + '" title="Remove member">✕</button>';
       }
 
       return '<div class="member-chip-wrap">'
-        + '<div class="member-chip" onclick="window.location.href=\'/messages.html?user=' + m._id + '\'">'
-        + '<div class="avatar-sm" style="background:var(--red);color:#fff">' + avatarInitial(m.name) + '</div>'
-        + escHtml(m.name) + badge
+        + '<div class="member-chip" onclick="window.location.href=\'/messages.html?user=' + m._id + '\'">' 
+        + '<div class="avatar-sm" style="background:var(--red);color:#fff">' + avatarInitial(m.name || '?') + '</div>'
+        + escHtml(m.name || 'Unknown') + badge
         + '</div>'
         + kickBtn
         + '</div>';

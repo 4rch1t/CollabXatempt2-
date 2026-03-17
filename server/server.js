@@ -17,13 +17,13 @@ app.use(express.static(path.join(__dirname, '../public')));
 async function connectDB() {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log('MongoDB Atlas connected');
-  } catch {
-    console.log('Atlas unavailable — starting local in-memory MongoDB...');
+    console.log('\x1b[32m%s\x1b[0m', '✓ MongoDB Atlas connected');
+  } catch (err) {
+    console.log('\x1b[33m%s\x1b[0m', '⚠ Atlas unavailable (' + err.message + ') — starting local in-memory MongoDB...');
     const { MongoMemoryServer } = require('mongodb-memory-server');
     const mongod = await MongoMemoryServer.create();
     await mongoose.connect(mongod.getUri());
-    console.log('In-memory MongoDB connected');
+    console.log('\x1b[33m%s\x1b[0m', '⚠ In-memory MongoDB connected (data will NOT persist across restarts)');
   }
 }
 connectDB();

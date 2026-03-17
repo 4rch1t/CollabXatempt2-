@@ -92,6 +92,7 @@ router.put('/applications/:appId', auth, async (req, res) => {
 // Get single project
 router.get('/:id', async (req, res) => {
   try {
+    if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).json({ error: 'Invalid project ID' });
     const project = await Project.findById(req.params.id)
       .populate('owner', 'name avatar skills')
       .populate('members', 'name avatar skills')
