@@ -90,6 +90,7 @@ p { font-weight: 400; }
   display: flex; align-items: center; gap: 4px;
 }
 .nav-logo span { color: var(--red); }
+.nav-logo-img { height: 40px; width: auto; display: block; }
 .nav-btn {
   padding: 8px 24px;
   background: var(--red); color: var(--white);
